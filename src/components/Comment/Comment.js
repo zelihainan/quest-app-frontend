@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { styled } from "@mui/material/styles";
 import { CardContent, InputAdornment, OutlinedInput, Avatar } from "@mui/material";
 
+// Stil bileşenleri
 const CommentContainer = styled(CardContent)({
   display: "flex",
   flexWrap: "wrap",
@@ -22,7 +23,7 @@ const StyledLink = styled(Link)({
 });
 
 function Comment(props) {
-    const { text, userId, userName} = props; // Varsayılan değer
+  const { text = "No comment", userId = 0, userName = "Anonymous" } = props;
 
   return (
     <CommentContainer>
@@ -36,15 +37,15 @@ function Comment(props) {
         startAdornment={
           <InputAdornment position="start">
             <StyledLink to={`/users/${userId}`}>
-                <Avatar
+              <SmallAvatar
                 sx={{
                   background: "linear-gradient(45deg, #2196F3 30%, #21cbf3 90%)",
                   color: "white",
                 }}
               >
-  {userName?.charAt(0)?.toUpperCase() || "?"}
-  </Avatar>            
-              </StyledLink>
+                {userName.charAt(0).toUpperCase()}
+              </SmallAvatar>
+            </StyledLink>
           </InputAdornment>
         }
         sx={{ color: "black", backgroundColor: "white" }}

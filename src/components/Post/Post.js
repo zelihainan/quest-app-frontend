@@ -39,6 +39,22 @@ function Post(props) {
   const [commentList, setCommentList] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // Yorumları yenilemek için kullanılan fonksiyon
+  const refreshComments = () => {
+    fetch(`/comments?postId=${postId}`)
+      .then((res) => res.json())
+      .then((result) => {
+        setCommentList(result); // Sadece API'den gelen yorumları ayarla
+        setIsLoaded(true);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching comments:", error);
+        setError(error);
+        setLoading(false);
+      });
+  };
+
   const handleExpandClick = () => {
     setExpanded(!expanded);
     if (!expanded && !loading) {
@@ -51,41 +67,9 @@ function Post(props) {
     setLiked(!liked);
   };
 
-  const refreshComments = () => {
-    console.log("Fetching comments for postId:", postId);
-    if (!postId) {
-      console.error("postId is undefined");
-      setLoading(false);
-      return;
-    }
-
-    fetch(`/comments?postId=${postId}`)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`API Error: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then(
-        (result) => {
-          console.log("Fetched comments:", result);
-          setCommentList(Array.isArray(result) && result.length > 0 ? result : [
-            {
-              userId: 1,
-              userName: "Dummy User",
-              text: "This is a dummy comment.",
-            },
-          ]);
-          setIsLoaded(true);
-          setLoading(false);
-        },
-        (error) => {
-          console.error("Error fetching comments:", error);
-          setError(error);
-          setLoading(false);
-        }
-      );
-  };
+  useEffect(() => {
+    refreshComments(); // İlk yüklemede yorumları getir
+  }, []);
 
   return (
     <div className="postContainer" style={postContainerStyle}>
@@ -133,7 +117,7 @@ function Post(props) {
             <CommentIcon />
           </IconButton>
         </CardActions>
-          <Collapse in={expanded} timeout="auto" unmountOnExit>
+        <Collapse in={expanded} timeout="auto" unmountOnExit>
           <Container fixed>
             {loading && (
               <div
@@ -151,19 +135,19 @@ function Post(props) {
             {!loading &&
               isLoaded &&
               commentList.map((comment, index) => (
-                <div key={index}>
-                  <Comment
-                    userId={comment.userId}
-                    userName={comment.userName}
-                    text={comment.text}
-                  />
-                  <CommentForm
-                    userId={comment.userId}
-                    userName={comment.userName}
-                    postId={postId}
-                  />
-                </div>
+                <Comment
+                  key={index}
+                  userId={comment.userId}
+                  userName={comment.userName}
+                  text={comment.text}
+                />
               ))}
+            <CommentForm
+              userId={userId}
+              userName={userName}
+              postId={postId}
+              setCommentRefresh={refreshComments} // Yorumları yenilemek için fonksiyonu geçiyoruz
+            />
           </Container>
         </Collapse>
       </Card>

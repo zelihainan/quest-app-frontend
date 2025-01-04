@@ -22,69 +22,72 @@ const StyledLink = styled(Link)({
 });
 
 function CommentForm(props) {
-    const {userId, userName, postId } = props;
-    const [text, setText] = useState("");
-    const saveComment = () => {
-        fetch("/comments",
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                postId: postId,
-                userId: userId,
-                text: text,
-            }),
-        })
-        .then((res) => res.json())
-        .catch((err) => console.log("error"))
-    }
+  const { userId, userName, postId, setCommentRefresh } = props;
+  const [text, setText] = useState("");
 
+  const saveComment = () => {
+    fetch("/comments", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        postId: postId,
+        userId: userId,
+        text: text,
+      }),
+    })
+      .then((res) => res.json())
+      .then(() => {
+        setCommentRefresh(); // Yorumları yenile
+      })
+      .catch((err) => console.log(err));
+  };
 
-    const handleSubmit = () => {
-        saveComment();
-        setText("");
-    }
-    
-    const handleChange = (value) => {
-        setText(value);
-    }
-    return (
+  const handleSubmit = () => {
+    saveComment();
+    setText(""); // Input'u temizle
+  };
+
+  const handleChange = (value) => {
+    setText(value);
+  };
+
+  return (
     <CommentContainer>
       <OutlinedInput
         id="outlined-adornment-amount"
         multiline
         inputProps={{ maxLength: 250 }}
         fullWidth
-        onChange={(i) => handleChange(i.target.value)}
+        onChange={(e) => handleChange(e.target.value)}
         startAdornment={
           <InputAdornment position="start">
-                      <StyledLink to={`/users/${userId}`}>
-                          <Avatar
-                          sx={{
-                            background: "linear-gradient(45deg, #2196F3 30%, #21cbf3 90%)",
-                            color: "white",
-                          }}
-                        >
-                          {userName.charAt(0).toUpperCase()}
-                        </Avatar>            
-                        </StyledLink>
-                    </InputAdornment>
+            <StyledLink to={`/users/${userId}`}>
+              <SmallAvatar
+                sx={{
+                  background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
+                  color: "white",
+                }}
+              >
+                {userName.charAt(0).toUpperCase()}
+              </SmallAvatar>
+            </StyledLink>
+          </InputAdornment>
         }
-        endAdornment = {
-            <InputAdornment position="end">
-                <Button
-                  variant="contained"
-                  style={{
-                    background: "linear-gradient(45deg, #2196F3 30%, #21cbf3 90%)",
-                    color: "white",
-                  }}
-                  onClick={handleSubmit}
-                >
-                  Comment
-                </Button>
-            </InputAdornment>
+        endAdornment={
+          <InputAdornment position="end">
+            <Button
+              variant="contained"
+              sx={{
+                background: "linear-gradient(45deg, #2196F3 30%, #21cbf3 90%)",
+                color: "white",
+              }}
+              onClick={handleSubmit}
+            >
+              Comment
+            </Button>
+          </InputAdornment>
         }
         value={text}
         sx={{ color: "black", backgroundColor: "white" }}
