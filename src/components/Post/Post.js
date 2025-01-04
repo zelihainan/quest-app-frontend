@@ -31,13 +31,14 @@ const postContainerStyle = {
 };
 
 function Post(props) {
-  const { title, text, userId, userName, postId = 1 } = props; // Varsayılan değer
+  const { title, text, userId, userName, postId = 1, likes = []} = props; // Varsayılan değer
   const [expanded, setExpanded] = useState(false);
   const [liked, setLiked] = useState(false);
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [commentList, setCommentList] = useState([]);
   const [loading, setLoading] = useState(false);
+  const likeCount = likes.length;
 
   // Yorumları yenilemek için kullanılan fonksiyon
   const refreshComments = () => {
@@ -101,22 +102,28 @@ function Post(props) {
           </Typography>
         </CardContent>
         <CardActions
-          disableSpacing
-          sx={{
-            justifyContent: "space-between",
-          }}
-        >
+        disableSpacing
+        sx={{
+          justifyContent: "space-between",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton aria-label="add to favorites" onClick={handleLike}>
             <FavoriteIcon style={liked ? { color: "red" } : null} />
           </IconButton>
-          <IconButton
-            aria-label="comment"
-            onClick={handleExpandClick}
-            disabled={loading}
-          >
-            <CommentIcon />
-          </IconButton>
+          <Typography variant="body2" sx={{ marginLeft: 0.005 }}>
+            {likeCount}
+          </Typography>
+        </div>
+        <IconButton
+          aria-label="comment"
+          onClick={handleExpandClick}
+          disabled={loading}
+        >
+          <CommentIcon />
+        </IconButton>
         </CardActions>
+
         <Collapse in={expanded} timeout="auto" unmountOnExit>
           <Container fixed>
             {loading && (
