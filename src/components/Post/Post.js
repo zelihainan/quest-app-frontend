@@ -17,6 +17,7 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import CommentIcon from "@mui/icons-material/Comment";
 import Comment from "../Comment/Comment";
 import CommentForm from "../Comment/CommentForm";
+import { PostWithAuth, DeleteWithAuth } from "../../services/HttpService";
 
 const StyledLink = styled(Link)({
   textDecoration: "none",
@@ -31,14 +32,16 @@ const postContainerStyle = {
 };
 
 function Post(props) {
-  const { title, text, userId, userName, postId = 1, likes = []} = props; // Varsayılan değer
+  const { title, text, userId, userName, postId = 1, likes = [] } = props; // Varsayılan değer
   const [expanded, setExpanded] = useState(false);
-  const [liked, setLiked] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(likes.length);
+  const [likeId, setLikeId] = useState(null);
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [commentList, setCommentList] = useState([]);
   const [loading, setLoading] = useState(false);
-  const likeCount = likes.length;
+  let disabled = localStorage.getItem("currentUser") == null ? true : false;
 
   // Yorumları yenilemek için kullanılan fonksiyon
   const refreshComments = () => {
@@ -65,10 +68,46 @@ function Post(props) {
   };
 
   const handleLike = () => {
-    setLiked(!liked);
+    if (!isLiked) {
+      saveLike();
+      setLikeCount(likeCount + 1);
+    } else {
+      deleteLike();
+      setLikeCount(likeCount - 1);
+    }
+    setIsLiked(!isLiked);
+  };
+
+  const saveLike = () => {
+    PostWithAuth("/likes", {
+      postId: postId,
+      userId: localStorage.getItem("currentUser"),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setLikeId(data.id);
+      })
+      .catch((err) => console.log(err));
+  };
+
+  const deleteLike = () => {
+    if (likeId) {
+      DeleteWithAuth(`/likes/${likeId}`).catch((err) => console.log(err));
+    }
+  };
+
+  const checkLikes = () => {
+    const likeControl = likes.find(
+      (like) => "" + like.userId === localStorage.getItem("currentUser")
+    );
+    if (likeControl != null) {
+      setLikeId(likeControl.id);
+      setIsLiked(true);
+    }
   };
 
   useEffect(() => {
+    checkLikes();
     refreshComments(); // İlk yüklemede yorumları getir
   }, []);
 
@@ -101,27 +140,26 @@ function Post(props) {
             {text}
           </Typography>
         </CardContent>
-        <CardActions
-        disableSpacing
-        sx={{
-          justifyContent: "space-between",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <IconButton aria-label="add to favorites" onClick={handleLike}>
-            <FavoriteIcon style={liked ? { color: "red" } : null} />
+        <CardActions disableSpacing sx={{ justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <IconButton
+              onClick={handleLike}
+              disabled={disabled}
+              aria-label="add to favorites"
+            >
+              <FavoriteIcon style={isLiked ? { color: "red" } : null} />
+            </IconButton>
+            <Typography variant="body2" sx={{ marginLeft: 0.005 }}>
+              {likeCount}
+            </Typography>
+          </div>
+          <IconButton
+            aria-label="comment"
+            onClick={handleExpandClick}
+            disabled={loading}
+          >
+            <CommentIcon />
           </IconButton>
-          <Typography variant="body2" sx={{ marginLeft: 0.005 }}>
-            {likeCount}
-          </Typography>
-        </div>
-        <IconButton
-          aria-label="comment"
-          onClick={handleExpandClick}
-          disabled={loading}
-        >
-          <CommentIcon />
-        </IconButton>
         </CardActions>
 
         <Collapse in={expanded} timeout="auto" unmountOnExit>
@@ -149,12 +187,14 @@ function Post(props) {
                   text={comment.text}
                 />
               ))}
-            <CommentForm
-              userId={userId}
-              userName={userName}
-              postId={postId}
-              setCommentRefresh={refreshComments} // Yorumları yenilemek için fonksiyonu geçiyoruz
-            />
+            {!disabled && (
+              <CommentForm
+                userId={localStorage.getItem("currentUser")}
+                userName={localStorage.getItem("userName")}
+                postId={postId}
+                setCommentRefresh={refreshComments} // Yorumları yenilemek için fonksiyonu geçiyoruz
+              />
+            )}
           </Container>
         </Collapse>
       </Card>

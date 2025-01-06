@@ -33,7 +33,6 @@ function Home() {
   } else {
     return (
       <div
-        fixed
         sx={{
           display: "flex",
           flexDirection: "column",  // Postları alt alta sıralamak için
@@ -43,11 +42,18 @@ function Home() {
           paddingTop: 5,
         }}
       >
-        <PostForm userId= {1} userName= {"ddd"}  refreshPosts = {refreshPosts} />
-        {postList.map((post) => (
-          <Post likes = {post.postLikes} postId = {post.postId} userId= {post.userId} userName= {post.userName} 
-          title={post.title} text={post.text}></Post>
-        ))}
+        {localStorage.getItem("currentUser") == null ? "": <PostForm userId= {localStorage.getItem("currentUser")} userName= {localStorage.getItem("userName")}  refreshPosts = {refreshPosts} />}
+        {postList.map((post, index) => (
+        <Post 
+          key={index}  // Benzersiz bir anahtar ekledim
+          likes={post.postLikes} 
+          postId={post.postId} 
+          userId={post.userId} 
+          userName={post.userName} 
+          title={post.title} 
+          text={post.text} 
+        />
+      ))}
       </div>
     );
   }

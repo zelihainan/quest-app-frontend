@@ -6,6 +6,8 @@ import {
     FormHelperText,
     Box,
     Typography,
+    Snackbar,
+    Alert,
   } from "@mui/material";
   import React, { useState } from "react";
   import { useNavigate } from "react-router-dom";
@@ -13,6 +15,9 @@ import {
   function Auth() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState(null); // Hata mesajı için state
+    const [success, setSuccess] = useState(false); // Başarı mesajı için state
+    const [open, setOpen] = useState(false); // Snackbar için state
     const navigate = useNavigate();
   
     const handleUsername = (value) => {
@@ -23,41 +28,53 @@ import {
       setPassword(value);
     };
   
-const sendRequest = (path) => {
-  fetch("/auth/" + path, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      userName: username,
-      password: password,
-    }),
-  })
-    .then((res) => {
-      if (!res.ok) {
-        // HTTP durum kodu kontrolü
-        throw new Error(`HTTP Error: ${res.status}`);
+    const sendRequest = async (path) => {
+      try {
+        const response = await fetch("http://localhost:3000/auth/" + path, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userName: username,
+            password: password,
+          }),
+        });
+  
+        if (!response.ok) {
+          throw new Error(`HTTP Error: ${response.status}`);
+        }
+  
+        const result = await response.json();
+  
+        if (path === "register") {
+          console.log("Register successful:", result.message);
+          setSuccess(true); // Başarı durumunu göster
+        } else if (path === "login") {
+          localStorage.setItem("tokenKey", result.message);
+          localStorage.setItem("currentUser", result.userId);
+          localStorage.setItem("userName", username);
+          navigate("/"); // Başarılı login sonrası anasayfaya yönlendir
+        }
+      } catch (error) {
+        console.error("Error:", error.message);
+        setError(error.message); // Hata durumunu göster
+        setOpen(true); // Snackbar'ı aç
       }
-      return res.json();
-    })
-    .then((result) => {
-      localStorage.setItem("tokenKey", result.message);
-      localStorage.setItem("currentUser", result.userId);
-      localStorage.setItem("userName", username);
-    })
-    .catch((err) => {
-      console.error("Error:", err.message);
-      // Hata mesajını ekranda göstermek için bir state ekleyebilirsiniz
-    });
-};
-
+    };
   
     const handleButton = (path) => {
       sendRequest(path);
       setUsername("");
       setPassword("");
-      navigate("/auth");
+    };
+  
+    const handleCloseError = () => {
+      setOpen(false); // Hata Snackbar'ını kapat
+    };
+  
+    const handleCloseSuccess = () => {
+      setSuccess(false); // Başarı Snackbar'ını kapat
     };
   
     return (
@@ -147,6 +164,34 @@ const sendRequest = (path) => {
             </Button>
           </Box>
         </Box>
+  
+        {/* Başarı Snackbar'ı */}
+        <Snackbar
+          open={success}
+          autoHideDuration={6000}
+          onClose={handleCloseSuccess}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          <Alert
+            onClose={handleCloseSuccess}
+            severity="success"
+            sx={{ width: "100%" }}
+          >
+            User successfully registered!
+          </Alert>
+        </Snackbar>
+  
+        {/* Hata Snackbar'ı */}
+        <Snackbar
+          open={open}
+          autoHideDuration={6000}
+          onClose={handleCloseError}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          <Alert onClose={handleCloseError} severity="error" sx={{ width: "100%" }}>
+            {error}
+          </Alert>
+        </Snackbar>
       </Box>
     );
   }
