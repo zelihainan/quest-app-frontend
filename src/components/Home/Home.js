@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Post from "../Post/Post";
-import { Container } from "@mui/material";
 import PostForm from "../Post/PostForm";
-import { OutlinedInput } from '@mui/material';
-
 
 function Home() {
   const [error, setError] = useState(null);
