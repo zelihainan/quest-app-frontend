@@ -5,11 +5,12 @@ import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
-import { Modal, Box } from "@mui/material";
+import { Modal, List, ListItem, Radio, Box } from "@mui/material"; // Güncel bileşenler
 import { useState } from "react";
 
 function Avatar() {
   const [open, setOpen] = useState(false);
+  const [selectedValue, setSelectedValue] = useState(0);
 
   const handleOpen = () => {
     setOpen(true);
@@ -17,6 +18,10 @@ function Avatar() {
 
   const handleClose = () => {
     setOpen(false);
+  };
+
+  const handleChange = (event) => {
+    setSelectedValue(event.target.value);
   };
 
   const style = {
@@ -41,7 +46,7 @@ function Avatar() {
             objectFit: "cover",
           }}
           component={"img"}
-          image="/avatars/avatar0.png"
+          image={`/avatars/avatar${selectedValue}.png`}
           title="User Avatar"
         />
         <CardContent>
@@ -65,14 +70,38 @@ function Avatar() {
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-        <Box sx={style}>
-          <Typography id="modal-modal-title" variant="h6" component="h2">
-            Text in a modal
-          </Typography>
-          <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-            Duis mollis, est non commodo luctus, nisi erat porttitor ligula.
-          </Typography>
-        </Box>
+        <List dense sx={style}>
+          {[1, 2, 3, 4, 5, 6].map((key) => {
+            const labelId = `checkbox-list-secondary-label-${key}`;
+            return (
+              <ListItem key={key} button>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    width: "100%",
+                  }}
+                >
+                  <CardMedia
+                    style={{ maxWidth: 100 }}
+                    component="img"
+                    alt={`Avatar n°${key}`}
+                    image={`/avatars/avatar${key}.png`}
+                    title="User Avatar"
+                  />
+                  <Radio
+                    edge="end"
+                    value={key}
+                    onChange={handleChange}
+                    checked={"" + selectedValue === "" + key}
+                    inputProps={{ "aria-labelledby": labelId }}
+                  />
+                </Box>
+              </ListItem>
+            );
+          })}
+        </List>
       </Modal>
     </div>
   );
