@@ -8,9 +8,26 @@ import Typography from "@mui/material/Typography";
 import { Modal, List, ListItem, Radio, Box } from "@mui/material"; // Güncel bileşenler
 import { useState } from "react";
 
-function Avatar() {
+
+function Avatar(props) {
+  const {avatarId} = props; 
   const [open, setOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useState(0);
+  const [selectedValue, setSelectedValue] = useState(avatarId);
+
+  const saveAvatar = () => {
+    fetch("/users/" + localStorage.getItem("currentUser"), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization" : localStorage.getItem("tokenKey"),
+        },
+        body: JSON.stringify({
+            avatar: selectedValue,
+        }),
+      })
+        .then((res) => res.json())
+        .catch((err) => console.log(err))
+  }
 
   const handleOpen = () => {
     setOpen(true);
@@ -18,6 +35,7 @@ function Avatar() {
 
   const handleClose = () => {
     setOpen(false);
+    saveAvatar();
   };
 
   const handleChange = (event) => {
@@ -74,7 +92,11 @@ function Avatar() {
           {[1, 2, 3, 4, 5, 6].map((key) => {
             const labelId = `checkbox-list-secondary-label-${key}`;
             return (
-              <ListItem key={key} button>
+<ListItem 
+  key={key} 
+  onClick={() => console.log('Clicked')} 
+  sx={{ cursor: 'pointer' }}
+>
                 <Box
                   sx={{
                     display: "flex",

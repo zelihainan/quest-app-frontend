@@ -17,7 +17,6 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import CommentIcon from "@mui/icons-material/Comment";
 import Comment from "../Comment/Comment";
 import CommentForm from "../Comment/CommentForm";
-import { PostWithAuth, DeleteWithAuth } from "../../services/HttpService";
 
 const StyledLink = styled(Link)({
   textDecoration: "none",
@@ -78,23 +77,52 @@ function Post(props) {
     setIsLiked(!isLiked);
   };
 
-  const saveLike = () => {
-    PostWithAuth("/likes", {
-      postId: postId,
-      userId: localStorage.getItem("currentUser"),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setLikeId(data.id);
-      })
-      .catch((err) => console.log(err));
-  };
-
-  const deleteLike = () => {
-    if (likeId) {
-      DeleteWithAuth(`/likes/${likeId}`).catch((err) => console.log(err));
+  const saveLike = async () => {
+    try {
+      const response = await fetch("/likes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization" : localStorage.getItem("tokenKey"),
+        },
+        body: JSON.stringify({
+          postId: postId,
+          userId: localStorage.getItem("currentUser"),
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      setLikeId(data.id);
+    } catch (error) {
+      console.error("Error saving like:", error);
     }
   };
+  
+  const deleteLike = async () => {
+    if (!likeId) return;
+  
+    try {
+      const response = await fetch(`/likes/${likeId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization" : localStorage.getItem("tokenKey"),
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      console.log("Like successfully deleted");
+    } catch (error) {
+      console.error("Error deleting like:", error);
+    }
+  };
+  
 
   const checkLikes = () => {
     const likeControl = likes.find(
@@ -129,7 +157,6 @@ function Post(props) {
                   color: "white",
                 }}
               >
-                {userName.charAt(0).toUpperCase()}
               </Avatar>
             </StyledLink>
           }
