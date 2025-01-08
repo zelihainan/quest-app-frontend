@@ -8,26 +8,57 @@ import Typography from "@mui/material/Typography";
 import { Modal, List, ListItem, Radio, Box } from "@mui/material"; // Güncel bileşenler
 import { useState } from "react";
 
-
 function Avatar(props) {
-  const {avatarId} = props; 
+  const { avatarId, userId, userName } = props;
   const [open, setOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState(avatarId);
 
   const saveAvatar = () => {
-    fetch("/users/" + localStorage.getItem("currentUser"), {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization" : localStorage.getItem("tokenKey"),
-        },
-        body: JSON.stringify({
-            avatar: selectedValue,
-        }),
+    // Kullanıcı bilgilerini localStorage'dan alıyoruz
+    const currentUserData = {
+      id: localStorage.getItem("currentUser"), // Kullanıcı ID'si
+      userName: localStorage.getItem("username"), // Kullanıcı adı
+      password: localStorage.getItem("password"), // Şifre
+      avatar: selectedValue, // Değiştirilen avatar
+    };
+  
+    // Sunucuya güncelleme isteği gönder
+    fetch(`/users/${localStorage.getItem("currentUser")}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: localStorage.getItem("tokenKey"), // Token bilgisi
+      },
+      body: JSON.stringify(currentUserData), // Güncel kullanıcı bilgileri
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Sunucu isteği başarısız oldu.");
+        }
+        return res.json();
       })
-        .then((res) => res.json())
-        .catch((err) => console.log(err))
-  }
+      .then((data) => {
+        console.log("Avatar başarıyla güncellendi:", data);
+        // Kullanıcı bilgilerini tekrar almak (isteğe bağlı)
+        return fetch(`/users/${localStorage.getItem("currentUser")}`, {
+          method: "GET",
+          headers: {
+            Authorization: localStorage.getItem("tokenKey"),
+          },
+        });
+      })
+      .then((res) => res.json())
+      .then((updatedData) => {
+        console.log("Güncel kullanıcı bilgileri:", updatedData);
+      })
+      .catch((err) => {
+        console.error("Bir hata oluştu:", err);
+      });
+  };
+  
+  
+  
+  
 
   const handleOpen = () => {
     setOpen(true);
@@ -69,16 +100,20 @@ function Avatar(props) {
         />
         <CardContent>
           <Typography gutterBottom variant="h5" component="div">
-            userName
+            {userName}
           </Typography>
           <Typography variant="body2" sx={{ color: "text.secondary" }}>
             User info
           </Typography>
         </CardContent>
         <CardActions>
-          <Button size="small" onClick={handleOpen}>
-            Change Avatar
-          </Button>
+          {localStorage.getItem("currentUser") === userId ? (
+            <Button size="small" onClick={handleOpen}>
+              Change Avatar
+            </Button>
+          ) : (
+            ""
+          )}
         </CardActions>
       </Card>
 
@@ -92,11 +127,11 @@ function Avatar(props) {
           {[1, 2, 3, 4, 5, 6].map((key) => {
             const labelId = `checkbox-list-secondary-label-${key}`;
             return (
-<ListItem 
-  key={key} 
-  onClick={() => console.log('Clicked')} 
-  sx={{ cursor: 'pointer' }}
->
+              <ListItem
+                key={key}
+                onClick={() => console.log("Clicked")}
+                sx={{ cursor: "pointer" }}
+              >
                 <Box
                   sx={{
                     display: "flex",
